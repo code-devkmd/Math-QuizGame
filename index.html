@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Math Quiz Challenge</title>
+    <style>
+        :root {
+            --bg: #0b0f17;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: radial-gradient(1200px 600px at 80% -10%, rgba(124, 58, 237, .25), transparent), radial-gradient(900px 400px at -10% 10%, rgba(34, 211, 238, .18), transparent), var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            perspective: 1000px;
+        }
+
+        .container {
+            background: white;
+            padding: 3rem;
+            /* Increased padding */
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 350px;
+            /* Slightly wider */
+            transform-style: preserve-3d;
+            animation: fadeIn 1s ease-in-out;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        /* Game Over State Styling */
+        .game-over {
+            transform: rotateY(180deg);
+        }
+
+        h1 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        /* --- New Timer & Stats Display --- */
+        #stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 0.5rem 0;
+            border-bottom: 2px solid #eee;
+        }
+
+        #timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ff5722;
+            /* Orange for urgency */
+        }
+
+        #score,
+        #high-score {
+            font-size: 1rem;
+            color: #4facfe;
+            font-weight: 600;
+        }
+
+        /* --- Difficulty Selection --- */
+        #difficulty-select {
+            margin-bottom: 1.5rem;
+        }
+
+        #difficulty-select label {
+            font-weight: 500;
+            color: #555;
+            margin-right: 10px;
+        }
+
+        #difficulty-select select {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 0.95rem;
+        }
+
+        /* --- Quiz & Input --- */
+        #quiz-box {
+            margin-bottom: 1.5rem;
+        }
+
+        #question {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            min-height: 50px;
+            /* Maintain layout */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            font-weight: 700;
+        }
+
+        input {
+            width: calc(100% - 100px);
+            /* Adjust width for submit button */
+            padding: 0.8rem;
+            margin-right: 15px;
+            border-radius: 8px;
+            border: 2px solid #ccc;
+            font-size: 1.2rem;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        button {
+            padding: 0.8rem 1rem;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            background: #4facfe;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        button:hover {
+            background: #2a94da;
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            background: #b8d9f5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* --- Feedback & Animations --- */
+        #feedback {
+            font-weight: bold;
+            margin-top: 1rem;
+            min-height: 20px;
+            font-size: 1.1rem;
+        }
+
+        .correct {
+            color: green;
+            animation: pop 0.5s;
+        }
+
+        .wrong {
+            color: red;
+            animation: shake 0.5s;
+        }
+
+        /* Game Over Screen */
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        #game-over-screen.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #final-score {
+            font-size: 2.5rem;
+            color: #ff5722;
+            margin: 1rem 0;
+        }
+
+        /* Keyframe animations remain the same */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.3);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧠 Math Challenge!</h1>
+
+        <div id="stats-bar">
+            <span id="score">Score: 0</span>
+            <span id="timer">Time: 60s</span>
+            <span id="high-score">Best: 0</span>
+        </div>
+
+        <div id="difficulty-select">
+            <label for="difficulty">Level:</label>
+            <select id="difficulty">
+                <option value="easy">Easy (+)</option>
+                <option value="medium">Medium (+, -)</option>
+                <option value="hard">Hard (+, -, x)</option>
+            </select>
+        </div>
+
+        <div id="quiz-box">
+            <p id="question">Select a difficulty and press Start.</p>
+            <input type="number" id="answer" placeholder="Your answer" disabled>
+            <button id="submit" disabled>Submit</button>
+        </div>
+
+        <div id="controls">
+            <button id="start">Start Challenge</button>
+            <p id="feedback"></p>
+        </div>
+
+        <div id="game-over-screen">
+            <h2>Time's Up!</h2>
+            <p>Your Final Score:</p>
+            <p id="final-score">0</p>
+            <button id="restart">Play Again</button>
+        </div>
+    </div>
+    <script>
+        let score = 0;
+        let highScore = localStorage.getItem('mathQuizHighScore') || 0;
+        let currentAnswer = null;
+        let gameActive = false;
+        let timeLeft = 60;
+        let timerInterval = null;
+
+        // DOM Elements
+        const containerEl = document.querySelector(".container");
+        const questionEl = document.getElementById("question");
+        const answerEl = document.getElementById("answer");
+        const feedbackEl = document.getElementById("feedback");
+        const scoreEl = document.getElementById("score");
+        const highScoreEl = document.getElementById("high-score");
+        const timerEl = document.getElementById("timer");
+        const difficultySelect = document.getElementById("difficulty");
+        const startBtn = document.getElementById("start");
+        const submitBtn = document.getElementById("submit");
+        const gameOverScreen = document.getElementById("game-over-screen");
+        const finalScoreEl = document.getElementById("final-score");
+        const restartBtn = document.getElementById("restart");
+
+        // Set initial high score display
+        highScoreEl.textContent = `Best: ${highScore}`;
+
+        // --- Event Listeners ---
+        startBtn.addEventListener("click", startGame);
+        submitBtn.addEventListener("click", checkAnswer);
+        restartBtn.addEventListener("click", resetGame);
+        answerEl.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && gameActive) {
+                event.preventDefault();
+                checkAnswer();
+            }
+        });
+
+        // --- Game Flow Functions ---
+
+        function startGame() {
+            if (gameActive) return;
+
+            score = 0;
+            timeLeft = 60;
+            gameActive = true;
+
+            // UI state setup
+            scoreEl.textContent = `Score: ${score}`;
+            timerEl.textContent = `Time: ${timeLeft}s`;
+            feedbackEl.textContent = "";
+            gameOverScreen.classList.remove("show");
+
+            startBtn.disabled = true;
+            difficultySelect.disabled = true;
+            answerEl.disabled = false;
+            submitBtn.disabled = false;
+
+            // Start the timer and first question
+            startTimer();
+            newQuestion();
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+
+            // Check and update high score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('mathQuizHighScore', highScore);
+                highScoreEl.textContent = `Best: ${highScore} (NEW!)`;
+            }
+
+            // Display Game Over Screen
+            finalScoreEl.textContent = score;
+            gameOverScreen.classList.add("show");
+
+            // Reset UI state
+            answerEl.disabled = true;
+            submitBtn.disabled = true;
+            startBtn.disabled = false;
+            difficultySelect.disabled = false;
+        }
+
+        function resetGame() {
+            // Simply hide the game over screen and prepare for new start
+            gameOverScreen.classList.remove("show");
+            startBtn.focus();
+        }
+
+        // --- Timer Functions ---
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = `Time: ${timeLeft}s`;
+
+                if (timeLeft <= 10) {
+                    timerEl.style.color = '#d50000'; // Red color for low time
+                } else {
+                    timerEl.style.color = '#ff5722';
+                }
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // --- Quiz Functions ---
+
+        function generateProblem(difficulty) {
+            let a, b, operator, answer;
+            let maxA = 10, maxB = 10;
+            let operators = ['+'];
+
+            switch (difficulty) {
+                case 'medium':
+                    maxA = 20; maxB = 15;
+                    operators = ['+', '-'];
+                    break;
+                case 'hard':
+                    maxA = 30; maxB = 10;
+                    operators = ['+', '-', '*'];
+                    break;
+                case 'easy':
+                default:
+                // Easy: simple addition
+            }
+
+            // Ensure first number is larger for clean subtraction
+            if (operators.includes('-') && Math.random() < 0.5) {
+                a = Math.floor(Math.random() * (maxA - 1)) + 2;
+                b = Math.floor(Math.random() * (a - 1)) + 1;
+            } else {
+                a = Math.floor(Math.random() * maxA) + 1;
+                b = Math.floor(Math.random() * maxB) + 1;
+            }
+
+            operator = operators[Math.floor(Math.random() * operators.length)];
+
+            switch (operator) {
+                case '+':
+                    answer = a + b;
+                    break;
+                case '-':
+                    answer = a - b;
+                    break;
+                case '*':
+                    // Limit multiplication complexity slightly
+                    answer = (a % 10) * (b % 10);
+                    a = a % 10;
+                    b = b % 10;
+                    break;
+            }
+
+            return { question: `${a} ${operator} ${b}`, answer: answer };
+        }
+
+        function newQuestion() {
+            if (!gameActive) return;
+
+            const difficulty = difficultySelect.value;
+            const problem = generateProblem(difficulty);
+
+            currentAnswer = problem.answer;
+            questionEl.textContent = `What is ${problem.question}?`;
+            answerEl.value = "";
+            feedbackEl.textContent = "";
+            answerEl.focus();
+        }
+
+        function checkAnswer() {
+            if (!gameActive) return;
+
+            let userAnswer = parseInt(answerEl.value);
+
+            if (isNaN(userAnswer)) {
+                feedbackEl.textContent = "Please enter a number.";
+                feedbackEl.className = "wrong";
+                answerEl.focus();
+                return;
+            }
+
+            if (userAnswer === currentAnswer) {
+                // Correct: 10 points and bonus time
+                score += 10;
+                timeLeft += 2; // Bonus 2 seconds for correct answer
+                feedbackEl.textContent = "✅ Correct! (+2s)";
+                feedbackEl.className = "correct";
+            } else {
+                // Wrong: Penalty
+                score = Math.max(0, score - 5); // Cannot go below 0
+                feedbackEl.textContent = "❌ Wrong! (-5pts)";
+                feedbackEl.className = "wrong";
+            }
+
+            scoreEl.textContent = `Score: ${score}`;
+
+            // Use setTimeout for visual feedback, then generate new question
+            // Disable button during transition to prevent spam
+            submitBtn.disabled = true;
+            answerEl.disabled = true;
+
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                answerEl.disabled = false;
+                newQuestion();
+            }, 500); // Shorter delay for faster gameplay
+        }
+    </script>
+</body>
+
+</html>
